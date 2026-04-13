@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Request } from "express";
 import multer from "multer";
 import path from "path";
 import { authenticate } from "../../middleware/auth.js";
@@ -11,10 +11,10 @@ import { env } from "../../config/env.js";
 // ── Multer config ──────────────────────────────────────────
 
 const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
+  destination: (_req: Request, _file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) => {
     cb(null, env.uploadDir);
   },
-  filename: (_req, file, cb) => {
+  filename: (_req: Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
     const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
     const ext = path.extname(file.originalname);
     cb(null, `kyb-${uniqueSuffix}${ext}`);
@@ -26,7 +26,7 @@ const upload = multer({
   limits: {
     fileSize: env.maxFileSizeMb * 1024 * 1024,
   },
-  fileFilter: (_req, file, cb) => {
+  fileFilter: (_req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
     const allowed = ["application/pdf", "image/jpeg", "image/png", "image/jpg"];
     if (allowed.includes(file.mimetype)) {
       cb(null, true);

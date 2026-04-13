@@ -1,3 +1,4 @@
+import { API_URL } from "@/config";
 import { useState } from "react";
 import { useRole } from "@/contexts/RoleContext";
 import { useNavigate } from "react-router-dom";
@@ -41,7 +42,7 @@ export default function Login() {
 
     try {
       if (isSignup) {
-        const res = await fetch(`http://${window.location.hostname}:3001/api/auth/register`, {
+        const res = await fetch(`${API_URL}/auth/register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -58,7 +59,7 @@ export default function Login() {
         if (!res.ok) throw new Error("Registration failed");
         navigate("/kyb-pending");
       } else {
-        const res = await fetch(`http://${window.location.hostname}:3001/api/auth/login`, {
+        const res = await fetch(`${API_URL}/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

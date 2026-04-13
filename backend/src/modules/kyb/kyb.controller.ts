@@ -35,7 +35,7 @@ export async function uploadDocument(req: Request, res: Response, next: NextFunc
 
 export async function reviewOrg(req: Request, res: Response, next: NextFunction) {
   try {
-    const { orgId } = req.params;
+    const orgId = typeof req.params.orgId === 'string' ? req.params.orgId : '';
     const result = await kybService.reviewOrg(orgId, req.user!.userId, req.body);
     const response: ApiResponse = { success: true, data: result };
     res.status(200).json(response);

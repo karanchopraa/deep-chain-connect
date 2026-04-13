@@ -1,3 +1,4 @@
+import { API_URL } from "@/config";
 import { useState } from "react";
 import { useRole, ROLE_LABELS } from "@/contexts/RoleContext";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -173,7 +174,7 @@ export default function EventLogging() {
     }
 
     try {
-      const response = await fetch(`http://${window.location.hostname}:3001/api/events`, {
+      const response = await fetch(`${API_URL}/events`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

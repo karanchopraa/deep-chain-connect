@@ -32,7 +32,8 @@ export async function listEvents(req: Request, res: Response, next: NextFunction
 
 export async function getEventById(req: Request, res: Response, next: NextFunction) {
   try {
-    const result = await eventsService.getEventById(req.params.id);
+    const eventId = typeof req.params.id === 'string' ? req.params.id : '';
+    const result = await eventsService.getEventById(eventId);
     const response: ApiResponse = { success: true, data: result };
     res.status(200).json(response);
   } catch (err) {

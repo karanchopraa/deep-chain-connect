@@ -18,7 +18,8 @@ export async function listInventory(req: Request, res: Response, next: NextFunct
 
 export async function getTraceability(req: Request, res: Response, next: NextFunction) {
   try {
-    const result = await inventoryService.getTraceability(req.params.sku);
+    const sku = typeof req.params.sku === 'string' ? req.params.sku : '';
+    const result = await inventoryService.getTraceability(sku);
     const response: ApiResponse = { success: true, data: result };
     res.status(200).json(response);
   } catch (err) {

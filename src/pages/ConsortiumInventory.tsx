@@ -1,3 +1,4 @@
+import { API_URL } from "@/config";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -41,7 +42,7 @@ export default function ConsortiumInventory() {
   const { data, isLoading } = useQuery({
     queryKey: ["inventory"],
     queryFn: async () => {
-      const res = await fetch(`http://${window.location.hostname}:3001/api/inventory`, {
+      const res = await fetch(`${API_URL}/inventory`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },

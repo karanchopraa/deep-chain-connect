@@ -17,7 +17,7 @@ const SALT_ROUNDS = 12;
 
 function generateAccessToken(payload: JwtPayload): string {
   return jwt.sign(payload, env.jwtAccessSecret, {
-    expiresIn: env.jwtAccessExpiry,
+    expiresIn: env.jwtAccessExpiry as any,
   });
 }
 

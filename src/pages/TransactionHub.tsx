@@ -1,3 +1,4 @@
+import { API_URL } from "@/config";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -10,7 +11,7 @@ export default function TransactionHub() {
   const { data, isLoading } = useQuery({
     queryKey: ["networkEvents"],
     queryFn: async () => {
-      const res = await fetch(`http://${window.location.hostname}:3001/api/events?limit=50`, {
+      const res = await fetch(`${API_URL}/events?limit=50`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
       });
       const json = await res.json();

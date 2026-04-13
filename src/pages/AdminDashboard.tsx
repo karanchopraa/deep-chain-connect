@@ -1,3 +1,4 @@
+import { API_URL } from "@/config";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion } from "framer-motion";
@@ -20,7 +21,7 @@ export default function AdminDashboard() {
   const { data, isLoading } = useQuery({
     queryKey: ["dashboardStats"],
     queryFn: async () => {
-      const res = await fetch(`http://${window.location.hostname}:3001/api/dashboard/stats`, {
+      const res = await fetch(`${API_URL}/dashboard/stats`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
       });
       const json = await res.json();

@@ -1,3 +1,4 @@
+import { API_URL } from "@/config";
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
 export type UserRole = "admin" | "supplier" | "processor" | "logistics" | "buyer" | "financier";
@@ -33,7 +34,7 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
     try {
       const token = localStorage.getItem("refreshToken");
       if (token) {
-        await fetch(`http://${window.location.hostname}:3001/api/auth/logout`, {
+        await fetch(`${API_URL}/auth/logout`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ refreshToken: token }),

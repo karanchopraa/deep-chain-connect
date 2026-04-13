@@ -1,3 +1,4 @@
+import { API_URL } from "@/config";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -17,7 +18,7 @@ export default function Traceability() {
     queryKey: ["traceability", fetchSku],
     queryFn: async () => {
       if (!fetchSku) return null;
-      const res = await fetch(`http://${window.location.hostname}:3001/api/inventory/${fetchSku}/traceability`, {
+      const res = await fetch(`${API_URL}/inventory/${fetchSku}/traceability`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
