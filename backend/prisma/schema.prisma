@@ -1,0 +1,168 @@
+// ─────────────────────────────────────────────────────────────
+// Prisma Schema — Deep Chain Connect
+// Seafood supply-chain consortium on Hyperledger Fabric
+// ─────────────────────────────────────────────────────────────
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Enums ──────────────────────────────────────────────────
+
+enum OrgRole {
+  ADMIN
+  SUPPLIER
+  PROCESSOR
+  LOGISTICS
+  BUYER
+  FINANCIER
+}
+
+enum OrgStatus {
+  INVITED
+  KYB_PENDING
+  KYB_UNDER_REVIEW
+  ACTIVE
+  SUSPENDED
+}
+
+enum KybDocStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum EventType {
+  CATCH
+  PROCESSING
+  CUSTODY_TRANSFER
+}
+
+enum EventStatus {
+  PENDING
+  COMMITTED
+  FAILED
+}
+
+enum ItemStatus {
+  IN_TRANSIT
+  IN_STORAGE
+  PROCESSING
+  PROCESSED
+  DELIVERED
+}
+
+// ── Models ─────────────────────────────────────────────────
+
+model Organization {
+  id        String    @id @default(uuid())
+  name      String
+  role      OrgRole
+  status    OrgStatus @default(KYB_PENDING)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  users           User[]
+  kybDocuments    KybDocument[]
+  events          SupplyChainEvent[]
+  inventoryItems  InventoryItem[]
+
+  @@map("organizations")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  firstName    String?  @map("first_name")
+  lastName     String?  @map("last_name")
+  orgId        String   @map("org_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  org           Organization  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String   @map("user_id")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model KybDocument {
+  id         String       @id @default(uuid())
+  orgId      String       @map("org_id")
+  fileName   String       @map("file_name")
+  fileType   String       @map("file_type")
+  filePath   String       @map("file_path")
+  fileSize   Int          @map("file_size")
+  status     KybDocStatus @default(PENDING)
+  reviewedBy String?      @map("reviewed_by")
+  reviewNote String?      @map("review_note")
+  createdAt  DateTime     @default(now()) @map("created_at")
+  updatedAt  DateTime     @updatedAt @map("updated_at")
+
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId])
+  @@map("kyb_documents")
+}
+
+model InventoryItem {
+  id             String     @id @default(uuid())
+  sku            String     @unique
+  species        String
+  volumeKg       Float      @map("volume_kg")
+  location       String
+  status         ItemStatus @default(IN_STORAGE)
+  ownerId        String     @map("owner_id")
+  certifications String?
+  expiryDate     DateTime?  @map("expiry_date")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+
+  owner          Organization       @relation(fields: [ownerId], references: [id])
+  events         SupplyChainEvent[]
+
+  @@index([ownerId])
+  @@index([sku])
+  @@map("inventory_items")
+}
+
+model SupplyChainEvent {
+  id              String      @id @default(uuid())
+  type            EventType
+  orgId           String      @map("org_id")
+  inventoryItemId String?     @map("inventory_item_id")
+  submittedBy     String      @map("submitted_by")
+  txHash          String?     @map("tx_hash")
+  data            Json
+  status          EventStatus @default(PENDING)
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  org           Organization   @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  inventoryItem InventoryItem? @relation(fields: [inventoryItemId], references: [id], onDelete: SetNull)
+
+  @@index([orgId])
+  @@index([inventoryItemId])
+  @@index([type])
+  @@index([txHash])
+  @@map("supply_chain_events")
+}

@@ -22,11 +22,16 @@ import {
 } from "lucide-react";
 import { useRole, UserRole } from "@/contexts/RoleContext";
 
+import { Database, Fingerprint } from "lucide-react";
+
 const navItems: { title: string; url: string; icon: any; roles: UserRole[] }[] = [
-  { title: "Event Logging", url: "/events", icon: FileInput, roles: ["admin", "supplier", "processor", "logistics"] },
+  { title: "Captain Dashboard", url: "/dashboard", icon: LayoutDashboard, roles: ["admin"] },
+  { title: "Event Logging", url: "/events", icon: FileInput, roles: ["admin", "supplier", "processor", "logistics", "buyer", "financier"] },
+  { title: "Transaction Hub", url: "/transactions", icon: Database, roles: ["admin", "buyer", "supplier", "processor", "logistics", "financier"] },
   { title: "Network Governance", url: "/network", icon: Network, roles: ["admin"] },
   { title: "Consortium Inventory", url: "/inventory", icon: Package, roles: ["admin", "buyer", "supplier", "processor"] },
-  { title: "Smart Settlements", url: "/settlements", icon: Landmark, roles: ["admin", "buyer", "supplier", "financier"] },
+  { title: "Traceability Lifecycle", url: "/traceability", icon: Fingerprint, roles: ["admin", "buyer", "supplier", "processor", "logistics", "financier"] },
+  { title: "Settlements", url: "/settlements", icon: Landmark, roles: ["admin", "buyer", "supplier", "financier"] },
 ];
 
 export function AppSidebar() {
