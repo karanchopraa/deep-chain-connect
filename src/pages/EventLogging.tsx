@@ -27,30 +27,30 @@ function SupplierForm() {
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div className="space-y-2">
         <Label className="text-xs font-medium">Vessel Name</Label>
-        <Input placeholder="MV Ocean Harvest" className="h-9" />
+        <Input name="vesselName" placeholder="MV Ocean Harvest" required className="h-9" />
       </div>
       <div className="space-y-2">
         <Label className="text-xs font-medium">Species</Label>
-        <Input placeholder="Yellowfin Tuna (Thunnus albacares)" className="h-9" />
+        <Input name="species" placeholder="Yellowfin Tuna (Thunnus albacares)" required className="h-9" />
       </div>
       <div className="space-y-2">
         <Label className="text-xs font-medium">GPS Coordinates</Label>
         <div className="flex gap-2">
-          <Input placeholder="Lat: 12.9716°N" className="h-9" />
-          <Input placeholder="Lon: 77.5946°E" className="h-9" />
+          <Input name="gpsLat" type="number" step="any" placeholder="Lat: 12.9716" required className="h-9" />
+          <Input name="gpsLon" type="number" step="any" placeholder="Lon: 77.5946" required className="h-9" />
         </div>
       </div>
       <div className="space-y-2">
         <Label className="text-xs font-medium">Weight (kg)</Label>
-        <Input type="number" placeholder="2,500" className="h-9" />
+        <Input name="weightKg" type="number" step="any" placeholder="2500" required className="h-9" />
       </div>
       <div className="space-y-2">
         <Label className="text-xs font-medium">Catch Date</Label>
-        <Input type="date" className="h-9" />
+        <Input name="catchDate" type="date" required className="h-9" />
       </div>
       <div className="space-y-2">
         <Label className="text-xs font-medium">Fishing Method</Label>
-        <Input placeholder="Pole & Line" className="h-9" />
+        <Input name="fishingMethod" placeholder="Pole & Line" required className="h-9" />
       </div>
     </div>
   );
@@ -61,15 +61,15 @@ function ProcessorForm() {
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div className="space-y-2">
         <Label className="text-xs font-medium">Input Batch IDs</Label>
-        <Textarea placeholder="BATCH-2024-001, BATCH-2024-002" className="h-20 text-xs" />
+        <Textarea name="inputBatchIds" placeholder="BATCH-2024-001, BATCH-2024-002" required className="h-20 text-xs" />
       </div>
       <div className="space-y-2">
         <Label className="text-xs font-medium">Output Lot Number</Label>
-        <Input placeholder="LOT-PRO-20240115-A" className="h-9" />
+        <Input name="outputLotNumber" placeholder="LOT-PRO-20240115-A" required className="h-9" />
       </div>
       <div className="space-y-2">
         <Label className="text-xs font-medium">Processing Yield %</Label>
-        <Input type="number" placeholder="72" className="h-9" />
+        <Input name="processingYieldPct" type="number" step="any" placeholder="72" required className="h-9" />
       </div>
       <div className="space-y-2">
         <Label className="text-xs font-medium">QC Certificate</Label>
@@ -85,21 +85,25 @@ function ProcessorForm() {
 function LogisticsForm() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="space-y-2 md:col-span-2">
+        <Label className="text-xs font-medium">SKU to Transfer</Label>
+        <Input name="sku" placeholder="CATCH-2024-..." required className="h-9" />
+      </div>
       <div className="space-y-2">
         <Label className="text-xs font-medium">Carrier ID</Label>
-        <Input placeholder="MAERSK-IND-4521" className="h-9" />
+        <Input name="carrierId" placeholder="MAERSK-IND-4521" required className="h-9" />
       </div>
       <div className="space-y-2">
         <Label className="text-xs font-medium">Vehicle / Container Plate</Label>
-        <Input placeholder="MSKU-1234567" className="h-9" />
+        <Input name="vehiclePlate" placeholder="MSKU-1234567" required className="h-9" />
       </div>
       <div className="space-y-2">
         <Label className="text-xs font-medium">Handover From</Label>
-        <Input placeholder="Chennai Processing Hub" className="h-9" />
+        <Input name="handoverFrom" placeholder="Chennai Processing Hub" required className="h-9" />
       </div>
       <div className="space-y-2">
         <Label className="text-xs font-medium">Handover To</Label>
-        <Input placeholder="Mumbai Cold Storage" className="h-9" />
+        <Input name="handoverTo" placeholder="Mumbai Cold Storage" required className="h-9" />
       </div>
       <div className="space-y-2 md:col-span-2">
         <Label className="text-xs font-medium">Temperature Logs</Label>
@@ -125,20 +129,74 @@ export default function EventLogging() {
     processor: "Record Processing Activity",
     logistics: "Chain of Custody Handover",
     admin: "Record Catch / Harvest",
-    buyer: "Record Catch / Harvest",
-    financier: "Record Catch / Harvest",
-  }[role];
+  }[role] || null;
 
-  const handleSubmit = () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setSubmitting(true);
-    setTimeout(() => {
-      setSubmitting(false);
-      const txHash = "0x" + Array.from({ length: 16 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
+    
+    const formData = new FormData(e.target as HTMLFormElement);
+    const apiPayload: any = {};
+    let type = "CATCH";
+    
+    if (role === "supplier" || role === "admin") {
+      type = "CATCH";
+      apiPayload.type = type;
+      apiPayload.data = {
+        vesselName: formData.get("vesselName"),
+        species: formData.get("species"),
+        gpsLat: parseFloat(formData.get("gpsLat") as string),
+        gpsLon: parseFloat(formData.get("gpsLon") as string),
+        weightKg: parseFloat(formData.get("weightKg") as string),
+        catchDate: new Date(formData.get("catchDate") as string).toISOString(),
+        fishingMethod: formData.get("fishingMethod"),
+      };
+    } else if (role === "processor") {
+      type = "PROCESSING";
+      apiPayload.type = type;
+      apiPayload.data = {
+        inputBatchIds: (formData.get("inputBatchIds") as string).split(",").map(s => s.trim()),
+        outputLotNumber: formData.get("outputLotNumber"),
+        processingYieldPct: parseFloat(formData.get("processingYieldPct") as string),
+        qcCertificateHash: "mock-ipfs-hash",
+      };
+    } else if (role === "logistics") {
+      type = "CUSTODY_TRANSFER";
+      apiPayload.type = type;
+      apiPayload.data = {
+        sku: formData.get("sku"),
+        carrierId: formData.get("carrierId"),
+        vehiclePlate: formData.get("vehiclePlate"),
+        handoverFrom: formData.get("handoverFrom"),
+        handoverTo: formData.get("handoverTo"),
+      };
+    }
+
+    try {
+      const response = await fetch(`http://${window.location.hostname}:3001/api/events`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+        body: JSON.stringify(apiPayload),
+      });
+
+      const resJson = await response.json();
+      if (!response.ok) throw new Error(resJson.error?.message || "Failed to commit");
+
       toast.success("Successfully hashed and recorded to Hyperledger Fabric", {
-        description: `Tx: ${txHash}`,
+        description: `Tx: ${resJson.data.txHash}`,
         duration: 5000,
       });
-    }, 1500);
+      (e.target as HTMLFormElement).reset();
+    } catch (error: any) {
+      toast.error("Failed to commit event", {
+        description: error.message,
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -182,6 +240,18 @@ export default function EventLogging() {
               </Badge>
             </CardContent>
           </Card>
+        ) : !formTitle ? (
+          <Card className="glass-card">
+            <CardContent className="p-8 text-center space-y-3">
+              <div className="w-12 h-12 rounded-full bg-muted/30 mx-auto flex items-center justify-center">
+                <FileInput className="h-6 w-6 text-muted-foreground" />
+              </div>
+              <h3 className="text-sm font-semibold text-foreground">Read-Only Access</h3>
+              <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                Your role does not have permission to log supply chain events. Use the Inventory, Transaction Hub, or Traceability pages to view network activity.
+              </p>
+            </CardContent>
+          </Card>
         ) : (
           <Card className="glass-card">
             <CardHeader className="pb-4">
@@ -190,29 +260,31 @@ export default function EventLogging() {
                 {formTitle}
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              {(role === "supplier" || role === "admin" || role === "buyer" || role === "financier") && <SupplierForm />}
-              {role === "processor" && <ProcessorForm />}
-              {role === "logistics" && <LogisticsForm />}
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {(role === "supplier" || role === "admin") && <SupplierForm />}
+                {role === "processor" && <ProcessorForm />}
+                {role === "logistics" && <LogisticsForm />}
 
-              <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded-lg p-3">
-                <Hash className="h-3.5 w-3.5 text-captain shrink-0" />
-                <span>This event will be SHA-256 hashed and committed to the consortium ledger.</span>
-              </div>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded-lg p-3">
+                  <Hash className="h-3.5 w-3.5 text-captain shrink-0" />
+                  <span>This event will be SHA-256 hashed and committed to the consortium ledger.</span>
+                </div>
 
-              <Button onClick={handleSubmit} disabled={submitting} className="w-full">
-                {submitting ? (
-                  <span className="flex items-center gap-2">
-                    <span className="h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                    Signing & committing...
-                  </span>
-                ) : (
-                  <>
-                    <MapPin className="mr-2 h-4 w-4" />
-                    Sign & Commit to Distributed Ledger
-                  </>
-                )}
-              </Button>
+                <Button type="submit" disabled={submitting} className="w-full">
+                  {submitting ? (
+                    <span className="flex items-center gap-2">
+                      <span className="h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                      Signing & committing...
+                    </span>
+                  ) : (
+                    <>
+                      <MapPin className="mr-2 h-4 w-4" />
+                      Sign & Commit to Distributed Ledger
+                    </>
+                  )}
+                </Button>
+              </form>
             </CardContent>
           </Card>
         )}

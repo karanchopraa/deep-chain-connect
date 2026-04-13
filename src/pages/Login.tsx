@@ -27,16 +27,67 @@ const participantRoles = [
 export default function Login() {
   const [isSignup, setIsSignup] = useState(false);
   const [participantRole, setParticipantRole] = useState("");
-  const { setIsAuthenticated } = useRole();
+  const { setIsAuthenticated, setRole } = useRole();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isSignup) {
-      navigate("/kyb-pending");
-    } else {
-      setIsAuthenticated(true);
-      navigate("/events");
+
+    const target = e.target as typeof e.target & {
+      email: { value: string };
+      password: { value: string };
+      orgName?: { value: string };
+    };
+
+    try {
+      if (isSignup) {
+        const res = await fetch(`http://${window.location.hostname}:3001/api/auth/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: target.email.value,
+            password: target.password.value,
+            organizationName: target.orgName?.value || "Unknown",
+            organizationRole: participantRole === "Captain Fresh Node" ? "ADMIN" :
+                              participantRole === "Independent Supplier" ? "SUPPLIER" :
+                              participantRole === "Processing Hub" ? "PROCESSOR" :
+                              participantRole === "Logistics Partner" ? "LOGISTICS" :
+                              participantRole === "Institutional Buyer" ? "BUYER" : "FINANCIER"
+          }),
+        });
+        if (!res.ok) throw new Error("Registration failed");
+        navigate("/kyb-pending");
+      } else {
+        const res = await fetch(`http://${window.location.hostname}:3001/api/auth/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: target.email.value,
+            password: target.password.value,
+          }),
+        });
+        if (!res.ok) throw new Error("Login failed");
+        const json = await res.json();
+        
+        const fetchedRole = json.data.organization.role.toLowerCase() as UserRole;
+
+        localStorage.setItem("accessToken", json.data.accessToken);
+        localStorage.setItem("refreshToken", json.data.refreshToken);
+        localStorage.setItem("userRole", fetchedRole);
+        
+        setIsAuthenticated(true);
+        setRole(fetchedRole);
+
+        // Map Admin to Dashboard for convenience
+        if (fetchedRole === "admin") {
+          navigate("/dashboard");
+        } else {
+          navigate("/events");
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Validation failed. Please check credentials.");
     }
   };
 
@@ -114,18 +165,18 @@ export default function Login() {
             {isSignup && (
               <div className="space-y-2">
                 <Label className="text-xs font-medium">Organization Name</Label>
-                <Input placeholder="Acme Seafood Co." className="h-10" />
+                <Input name="orgName" placeholder="Acme Seafood Co." className="h-10" />
               </div>
             )}
 
             <div className="space-y-2">
               <Label className="text-xs font-medium">Email</Label>
-              <Input type="email" placeholder="operator@example.com" className="h-10" />
+              <Input name="email" type="email" placeholder="operator@example.com" className="h-10" />
             </div>
 
             <div className="space-y-2">
               <Label className="text-xs font-medium">Password</Label>
-              <Input type="password" placeholder="••••••••" className="h-10" />
+              <Input name="password" type="password" placeholder="••••••••" className="h-10" />
             </div>
 
             {isSignup && (

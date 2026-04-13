@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { useRole } from "@/contexts/RoleContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -50,6 +51,15 @@ const statusConfig: Record<string, { className: string; icon: any }> = {
 
 export default function SmartSettlements() {
   const [selected, setSelected] = useState<Contract | null>(null);
+  const { role } = useRole();
+
+  const filteredContracts = contracts.filter((c) => {
+    if (role === "admin" || role === "financier" || role === "logistics") return true;
+    if (role === "supplier") return ["Oceanic Foods Ltd", "Neptune Fisheries", "SeaPrime Exports"].includes(c.seller);
+    if (role === "processor") return ["FreshCatch Processing", "Arctic Cold Chain"].includes(c.seller);
+    if (role === "buyer") return ["Metro Wholesale", "FreshMart Corp", "SeaKing Restaurants", "Global Seafood Inc", "Coastal Dining Group"].includes(c.buyer);
+    return false;
+  });
 
   return (
     <AppLayout>
@@ -58,7 +68,7 @@ export default function SmartSettlements() {
           <div>
             <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
               <Landmark className="h-5 w-5 text-captain" />
-              Smart Contract Settlements
+              Settlements
             </h1>
             <p className="text-sm text-muted-foreground mt-1">Automated B2B payments triggered by verified delivery conditions</p>
           </div>
@@ -103,7 +113,14 @@ export default function SmartSettlements() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {contracts.map((c) => {
+                {filteredContracts.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      No settlements found for your organization.
+                    </TableCell>
+                  </TableRow>
+                )}
+                {filteredContracts.map((c) => {
                   const config = statusConfig[c.status];
                   const StatusIcon = config.icon;
                   return (

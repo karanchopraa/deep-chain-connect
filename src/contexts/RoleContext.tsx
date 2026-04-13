@@ -16,16 +16,42 @@ interface RoleContextType {
   setRole: (role: UserRole) => void;
   isAuthenticated: boolean;
   setIsAuthenticated: (v: boolean) => void;
+  logout: () => void;
 }
 
 const RoleContext = createContext<RoleContextType | undefined>(undefined);
 
 export const RoleProvider = ({ children }: { children: ReactNode }) => {
-  const [role, setRole] = useState<UserRole>("admin");
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [role, setRole] = useState<UserRole>(
+    (localStorage.getItem("userRole") as UserRole) || "admin"
+  );
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    !!localStorage.getItem("accessToken")
+  );
+
+  const logout = async () => {
+    try {
+      const token = localStorage.getItem("refreshToken");
+      if (token) {
+        await fetch(`http://${window.location.hostname}:3001/api/auth/logout`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refreshToken: token }),
+        });
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("userRole");
+      setIsAuthenticated(false);
+      window.location.href = "/login";
+    }
+  };
 
   return (
-    <RoleContext.Provider value={{ role, setRole, isAuthenticated, setIsAuthenticated }}>
+    <RoleContext.Provider value={{ role, setRole, isAuthenticated, setIsAuthenticated, logout }}>
       {children}
     </RoleContext.Provider>
   );

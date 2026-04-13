@@ -8,11 +8,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Lock, Bell } from "lucide-react";
+import { Lock, Bell, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function TopNavbar() {
-  const { role, setRole } = useRole();
+  const { role, setRole, logout } = useRole();
 
   return (
     <header className="h-14 flex items-center justify-between border-b bg-card px-4">
@@ -49,6 +49,12 @@ export function TopNavbar() {
         <Button variant="ghost" size="icon" className="h-8 w-8 relative">
           <Bell className="h-4 w-4 text-muted-foreground" />
           <span className="absolute top-1 right-1 w-2 h-2 bg-captain rounded-full" />
+        </Button>
+
+        <div className="h-5 w-px bg-border mx-1" />
+
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={logout} title="Sign Out">
+          <LogOut className="h-4 w-4 text-rose" />
         </Button>
       </div>
     </header>
